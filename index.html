@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pro URL Shortener</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #6c63ff;
+  --bg: linear-gradient(135deg, #e0f7fa, #e1bee7);
+  --card: rgba(255,255,255,0.7);
+  --text: #222;
+}
+
+body.dark {
+  --bg: linear-gradient(135deg, #1e1e2f, #111);
+  --card: rgba(30,30,40,0.8);
+  --text: #fff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg);
+  transition: 0.4s ease;
+}
+
+.container {
+  background: var(--card);
+  backdrop-filter: blur(15px);
+  padding: 40px;
+  border-radius: 20px;
+  width: 400px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+  animation: fadeIn 0.8s ease;
+}
+
+h1 {
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  margin-bottom: 15px;
+  background: rgba(255,255,255,0.6);
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: translateY(-3px);
+}
+
+.result {
+  margin-top: 20px;
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #4caf50;
+  color: white;
+  padding: 15px 25px;
+  border-radius: 12px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: 0.4s;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+}
+
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+</style>
+</head>
+<body>
+
+<div class="toggle" onclick="toggleMode()">🌙</div>
+
+<div class="container">
+  <h1>🚀 URL Shortener</h1>
+  <input type="text" id="urlInput" placeholder="Enter your long URL..." />
+  <button onclick="shorten()">Short URL</button>
+  <div class="result" id="result"></div>
+</div>
+
+<div class="toast" id="toast">Link Created Successfully 🎉</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+async function shorten() {
+  const url = document.getElementById("urlInput").value;
+
+  const res = await fetch("/shorten", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ originalUrl: url })
+  });
+
+  const data = await res.json();
+
+  if(data.shortUrl) {
+    document.getElementById("result").innerHTML =
+      `<a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a>
+       <br><br>
+       <button onclick="copyLink('${data.shortUrl}')">Copy</button>`;
+
+    showToast();
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  }
+}
+
+function copyLink(link) {
+  navigator.clipboard.writeText(link);
+  showToast("Copied to clipboard ✅");
+}
+
+function showToast(message="Link Created Successfully 🎉") {
+  const toast = document.getElementById("toast");
+  toast.innerText = message;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 3000);
+}
+
+function toggleMode() {
+  document.body.classList.toggle("dark");
+}
+</script>
+
+</body>
+</html>
